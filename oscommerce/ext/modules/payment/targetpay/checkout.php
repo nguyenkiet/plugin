@@ -107,15 +107,15 @@
 		$cart->weight = 0;
 		$cart->content_type = false;
 
-    // unregister session variables used during checkout
-    tep_session_unregister('sendto');
-    tep_session_unregister('billto');
-    tep_session_unregister('shipping');
-    tep_session_unregister('payment');
-    tep_session_unregister('comments');
-
-    tep_redirect(tep_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
-    die();
+	    // unregister session variables used during checkout
+	    tep_session_unregister('sendto');
+	    tep_session_unregister('billto');
+	    tep_session_unregister('shipping');
+	    tep_session_unregister('payment');
+	    tep_session_unregister('comments');
+	    $cart->reset(true);
+	    tep_redirect(tep_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
+	    die();
 
 	} else if($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PAYMENT_CANCELLED){
 		$message = 'Je hebt je betaling geannuleerd, <br/><a href="checkout_payment.php">Klik hier om een andere betaalmethode te kiezen.</a>';
@@ -123,6 +123,10 @@
 		$bordercolor = '#FFC78C';
 	} else if($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PAYMENT_ERROR){
 		$message = 'Er was een probleem tijdens het controleren van je betaling, contacteer de webshop.';
+		$bgcolor = '#FFBDB3';
+		$bordercolor = '#FF9B8C';
+	} else {
+		$message = 'Uw transactie is onderbroken.';
 		$bgcolor = '#FFBDB3';
 		$bordercolor = '#FF9B8C';
 	}
