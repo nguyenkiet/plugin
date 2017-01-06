@@ -8,7 +8,7 @@
  * @license see LICENSE.TXT
  */
 
-	define('FILENAME_TARGETPAY_TRANSACTIONS', 'targetpay_transactions.php');
-	define('TABLE_TARGETPAY_TRANSACTIONS', 'targetpay_transactions');
-	define('TABLE_TARGETPAY_DIRECTORY', 'targetpay_directory');
+define('FILENAME_TARGETPAY_TRANSACTIONS', 'targetpay_transactions.php');
+define('TABLE_TARGETPAY_TRANSACTIONS', 'targetpay_transactions');
+define('TABLE_TARGETPAY_DIRECTORY', 'targetpay_directory');
 ?>

@@ -24,8 +24,7 @@ class TargetPayIdealOld extends TargetPayClass {
 	 * @desc constructor class
 	 * @param integer $intRtlo
 	 */
-	public function __construct( $intRtlo ) {
-    
+	public function __construct( $intRtlo ) {    
 		/**
 		 * call parent constructor
 		 */
@@ -65,65 +64,6 @@ class TargetPayIdealOld extends TargetPayClass {
         $iTrxID = explode ( ' ', $aResponse[0] );
         return array ( $iTrxID[1], $aResponse[1] );
   	}
-
-  	/**
-  	 * @desc get all banks (various methods
-  	 * @return array $banks_array
-  	 */
-	public function getBanks()
-	{
-		
-		
-		$banks_array = array();
-		$i = new stdClass();
-					$i->issuerID ="test";
-					$i->issuerName = "asdfsadfsa";
-					$i->issuerList = "Short";
-					$banks_array[]=$i;
-return $banks_array;
-
-
-		//~ $file = file_get_contents("https://www.targetpay.com/ideal/issuers-nl.js", "r");
-		//~ $file = str_ireplace("d.writeln('');","",$file);
-		//~ $file = str_ireplace("d=document;","",$file);
-		//~ $aFileparts = explode("d.writeln",$file);
-		//~ if(count($aFileparts) > 0)
-		//~ {
-			//~ foreach($aFileparts as $sFilepart)
-			//~ {
-				//~ $iBankValue = preg_replace("/[^0-9]/", "", strtolower($sFilepart));
-				//~ $sBankName = trim(strip_tags(str_replace(array("('","')",";"),"",$sFilepart)));
-				//~ 
-				//~ if($iBankValue > 0 && $iBankValue != "")
-				//~ {
-					//~ echo 'hier<br/>';
-					//~ $i = new stdClass();
-					//~ $i->issuerID = $iBankValue;
-					//~ $i->issuerName = $sBankName;
-					//~ $i->issuerList = "Short";
-					//~ $banks_array[]=$i;
-				//~ }
-				//~ 
-			//~ }
-		//~ }
-		//~ else
-		//~ {
-			//~ echo 'daar<br/>';
-			//~ return $this->getStaticBanks();
-		//~ }
-		//~ 
-		//~ if(count($banks_array) > 0)
-		//~ {
-			//~ return $banks_array;
-		//~ }
-		//~ else
-		//~ {
-			//~ return $this->getStaticBanks();
-		//~ }
-			
-		
-	}
-  
   
   	/**
   	 * @desc Validate the payment now by trxId
@@ -402,45 +342,6 @@ return $banks_array;
     	}
     	return $sErrorCodePart[1];
 	}
-  /**
-  * @desc Get available issuers, and return array
-  *
-  * @return array
-  */
-    private function getStaticBanks()
-    {
-    	/**
-    	 * @var $banks_array unknown_type
-    	 *     
-    	 * ABN AMRO Bank id: 0031
-    	 * ASN Bank 0761 
-    	 * Fortis Bank 0081
-    	 * Friesland Bank 0091
-    	 * ING Bank 0721
-    	 * Rabobank 0021
-    	 * SNS Bank 0751
-    	 * SNS Regio Bank 0771
-    	 * Tridios Bank 0511
-    	 */
-    	$banks_array = array();
-    	$staticbanksarray = array('0031'=>'ABN AMRO Bank', '0761'=>'ASN Bank', '0081'=>'Fortis Bank', '0091'=>'Friesland Bank', '0721'=>'ING Bank', '0021'=>'Rabobank', '0751'=>'SNS Bank', '0771'=>'SNS Regio Bank', '0511'=>'Tridios Bank');
-    	
-    	//~ foreach($staticbanksarray as $iBankValue=>$sBankName)
-    	//~ {
-    		//~ $i = new stdClass();
-    		//~ $i->issuerID = $iBankValue;
-		    //~ $i->issuerName = $sBankName;
-		    //~ $i->issuerList = "Short";
-			//~ $banks_array[]=$i;
-    	//~ }
-    	
-    	$i = new stdClass();
-    		$i->issuerID = 'testblaat';
-		    $i->issuerName = 'getstatic';
-		    $i->issuerList = "Short";
-			$banks_array[]=$i;
-		return $banks_array;
-    }
 }
   
   
