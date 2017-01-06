@@ -70,7 +70,7 @@ class TargetPayCore
     protected $description          = null;
     protected $returnUrl            = null;        // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
     protected $cancelUrl            = null;        // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
-    protected $reportUrl            = null;         // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
+    protected $reportUrl            = null;        // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
     protected $bankUrl              = null;
     protected $transactionId        = null;
     protected $paidStatus           = false;
