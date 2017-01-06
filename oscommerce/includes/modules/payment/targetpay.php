@@ -216,7 +216,7 @@ class targetpay
 
 		if(!isset($_POST['bankID']) || ($_POST['bankID'] < 0)) {
 			$messageStack->add_session('checkout_payment', MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_NO_ISSUER_SELECTED);
-			tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false));
+			tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode(MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_NO_ISSUER_SELECTED), 'SSL', true, false));
 		}
 		$ideal_issuerID = tep_db_input($_POST['bankID']); //bank
 		$ideal_purchaseID = time();
@@ -241,7 +241,7 @@ class targetpay
 
 		if($this->targetpaymodule->setIdealAmount($ideal_amount) === false) {
 			$messageStack->add_session('checkout_payment', MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING."<br/>".$this->targetpaymodule->getError());
-			tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false));
+			tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode(MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING." ".$this->targetpaymodule->getError()), 'SSL', true, false));
 		}
 		else
 		{
@@ -253,20 +253,18 @@ class targetpay
 			$objTargetpay->setReturnUrl(tep_href_link('ext/modules/payment/targetpay/checkout.php', '', 'SSL'));
 			$objTargetpay->setReportUrl(tep_href_link('ext/modules/payment/targetpay/callback.php', '', 'SSL'));
 
-
 			$result = @$objTargetpay->startPayment();
-
 
 			if($result === false) {
 				$messageStack->add_session('checkout_payment', MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING . "<br/>".$objTargetpay->getErrorMessage());
-				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false));
+				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode(MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING. " ". $objTargetpay->getErrorMessage()), 'SSL', true, false));
 			}
 
 			$this->transactionID = $objTargetpay->getTransactionId();
 
 			if(!is_numeric($this->transactionID)) {
 				$messageStack->add_session('checkout_payment', MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING. "<br/>".$objTargetpay->getErrorMessage());
-				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false));
+				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode(MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING), 'SSL', true, false));
 			}
 
 			$this->bankUrl = $objTargetpay->getBankUrl();
@@ -577,7 +575,7 @@ class targetpay
 
 		if($this->transactionID == "") {
 			$messageStack->add_session('checkout_payment', MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING);
-			tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false));
+			tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode(MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_ERROR_OCCURRED_PROCESSING), 'SSL', true, false));
 		}
 
 		$iTest = (MODULE_PAYMENT_TARGETPAY_TESTACCOUNT == "True")?1:0;
@@ -605,11 +603,11 @@ class targetpay
 				break;
 			case "open":
 				$messageStack->add_session('checkout_payment', MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_TRANSACTION_OPEN);
-				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false));
+				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode(MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_TRANSACTION_OPEN), 'SSL', true, false));
 				break;
 			default:
 				$messageStack->add_session('checkout_payment', MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_TRANSACTION_OPEN);
-				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true, false));
+				tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode(MODULE_PAYMENT_TARGETPAY_ERROR_TEXT_TRANSACTION_OPEN), 'SSL', true, false));
 				break;
 		}
 	}
