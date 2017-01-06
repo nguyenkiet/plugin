@@ -61,7 +61,6 @@ class targetpay
 
 		$this->transactionDescription = MODULE_PAYMENT_TARGETPAY_TRANSACTION_DESCRIPTION;
 
-
 		$this->targetpaymodule = new TargetPayIdealOld($this->rtlo);
 		if(MODULE_PAYMENT_TARGETPAY_REPAIR_ORDER === true) {
 			if($_GET['targetpay_transaction_id']) {
@@ -123,6 +122,11 @@ class targetpay
 			$i->issuerList = 'short';
 			array_push($issuerList, $i);
 		}
+		// Add VISA/MASTER card
+		array_push($issuerList, (object) array('issuerID' => 'CC', 'issuerName' => 'Creditcard: Visa/Master card', 'issuerList' => 'short'));
+		// Add Paysafecard
+		array_push($issuerList, (object) array('issuerID' => 'WAL', 'issuerName' => 'Paysafecard: Paysafe card', 'issuerList' => 'short'));
+
 		return $issuerList;
 	}
 
@@ -138,43 +142,52 @@ class targetpay
 	/**
 	 * @desc make bank selection field
 	 */
-	function selection()
+	function selection($active_only = true)
 	{
 		global $order;
 
 		$directory = $this->getDirectory();
-
 		if(!is_null($directory)) {
 			$issuers = array();
 			$issuerType = "Short";
 
 			$issuers[] = array('id' => "-1", 'text' => MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION);
+			$selected_methods = explode(',', MODULE_PAYMENT_TARGETPAY_METHODS);
 
 			foreach ($directory as $issuer)
 			{
-				if($issuer->issuerList != $issuerType) {
-					//$issuers[] = array('id' => "-1", 'text' => MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION_SEPERATOR);
-					$issuerType = $issuer->issuerList;
+				if(!$active_only || ($active_only && in_array($issuer->issuerID, $selected_methods))){
+					if($issuer->issuerList != $issuerType) {
+						//$issuers[] = array('id' => "-1", 'text' => MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION_SEPERATOR);
+						$issuerType = $issuer->issuerList;
+					}
+					$issuers[] = array('id' => $issuer->issuerID, 'text' => $issuer->issuerName);
 				}
-				$issuers[] = array('id' => $issuer->issuerID, 'text' => $issuer->issuerName);
 			}
-			// Add VISA/MASTER card
-			$issuers[] = array('id' => 'CC', 'text' => 'Creditcard: Visa/Master card');
-			$issuers[] = array('id' => 'WAL', 'text' => 'Paysafecard: Paysafe card');
 			// Sort payment methods
 			usort($issuers, "targetpay::compareIssuer");
 
 			$selection = array( 'id' => $this->code,
 					'module' => $this->title, // $this->title . " ".MODULE_PAYMENT_TARGETPAY_TEXT_INFO
-					'fields' => array(  array(  'title' => tep_image('images/icons/targetpay.png', '', '', '', 'align=absmiddle'), // .MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION
-							'field' => tep_draw_pull_down_menu('bankID', $issuers, '', 'onChange="check_targetpay()"'))));
+					'fields' => array(
+							array(  'title' => tep_image('images/icons/targetpay.png', '', '', '', 'align=absmiddle'), // .MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION
+									'field' => tep_draw_pull_down_menu('bankID', $issuers, '', 'onChange="check_targetpay()"')
+							)
+					),
+					'issuers' => $issuers
+			);
 		}
 		else
 		{
 			$selection = array( 'id' => $this->code,
 					'module' => $this->title . MODULE_PAYMENT_TARGETPAY_TEXT_INFO,
-					'fields' => array(  array(  'title' => MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION,
-							'field' => "Could not get banks. ".$this->targetpaymodule->getErrorMessage())));
+					'fields' => array(
+							array(  'title' => MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION,
+									'field' => "Could not get banks. ".$this->targetpaymodule->getErrorMessage()
+							)
+					),
+					'issuers' => []
+			);
 		}
 		return $selection;
 	}
@@ -521,7 +534,35 @@ class targetpay
 			$this->prepareTransaction();
 		}
 	}
-
+	/**
+	 * Setting payment methods will be used in system
+	 * @param unknown $key_value
+	 * @param string $key
+	 * @return string
+	 */
+	public static function cfg_select_payment_methods($key_value, $key = '') {
+		$string = '';
+		$targetpay = new targetpay();
+		$issuers = $targetpay->selection(false)['issuers'];
+		$selected_arr = explode(',', $key_value);
+		if(!empty($issuers)){
+			foreach ($issuers as $issuer){
+				if($issuer['id'] == "-1") continue;
+				$string .= '<br /><input type="checkbox" '. (in_array($issuer['id'], $selected_arr) ? 'checked="checked"' : '') .' onchange="ck_methods()" name="' . $key . '" value="' . $issuer['id'] . '"/>';
+				$string .= $issuer['text'];
+			}
+		}
+		$string .= "<input type='hidden' name = 'configuration[". $key ."]' value = '".$key_value."'/>";
+		$string .= "<script> function ck_methods(){
+    				var values = '';
+    				$(\"input[name='". $key ."']\").each( function () {
+				      if($(this).is(':checked')) values += $(this).val() + ',';
+				    });
+					if(values.length > 1) values = values.substring(0, values.length - 1);
+    			    $(\"input[name='configuration[". $key ."]']\").val(values);
+    			}</script>";
+		return $string;
+	}
 	/**
 	 * @desc check payment status
 	 */
@@ -612,6 +653,7 @@ class targetpay
 	 */
 	function install()
 	{
+		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Payment methods', 'MODULE_PAYMENT_TARGETPAY_METHODS', 'CC,IDE0031,IDE0761,IDE0901,IDE0721,IDE0801,IDE0021,IDE0771,IDE0751,IDE0511,IDE0161,MRC,WAL,DEB49,DEB39,DEB43,DEB41', 'Activated payment methods', '6', '1', 'targetpay::cfg_select_payment_methods( ', now())");
 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable Targetpay payment module', 'MODULE_PAYMENT_TARGETPAY_STATUS', 'True', 'Do you want to accept Targetpay payments?', '6', '1', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Sortorder', 'MODULE_PAYMENT_TARGETPAY_SORT_ORDER', '0', 'Sort order of payment methods in list. Lowest is displayed first.', '6', '2', now())");
 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, use_function, set_function, date_added) values ('Payment zone', 'MODULE_PAYMENT_TARGETPAY_ZONE', '0', 'If a zone is selected, enable this payment method for that zone only.', '6', '3', 'tep_get_zone_class_title', 'tep_cfg_pull_down_zone_classes(', now())");
@@ -625,7 +667,6 @@ class targetpay
 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('Targetpay ID', 'MODULE_PAYMENT_TARGETPAY_TARGETPAY_RTLO', '93929', 'The Targetpay RTLO', '6', '4', now())");// Default TargetPay
 
 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Testaccount?', 'MODULE_PAYMENT_TARGETPAY_TESTACCOUNT', 'False', 'Enable testaccount (only for validation)?', '6', '1', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
-
 
 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, date_added) values ('IP address', 'MODULE_PAYMENT_TARGETPAY_REPAIR_IP', '" . $_SERVER['REMOTE_ADDR'] . "', 'The IP address of the user (administrator) that is allowed to complete open ideal orders (if empty everyone will be allowed, which is not recommended!).', '6', '8', now())");
 		tep_db_query("insert into " . TABLE_CONFIGURATION . " (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, date_added) values ('Enable pre order emails', 'MODULE_PAYMENT_TARGETPAY_EMAIL_ORDER_INIT', 'False', 'Do you want emails to be sent to the store owner whenever an Targetpay order is being initiated? The default is <strong>False</strong>.', '6', '17', 'tep_cfg_select_option(array(\'True\', \'False\'), ', now())");
@@ -676,7 +717,7 @@ class targetpay
 
 	function keys()
 	{
-		return array('MODULE_PAYMENT_TARGETPAY_PAYMENT_ERROR','MODULE_PAYMENT_TARGETPAY_PREPARE_ORDER_STATUS_ID','MODULE_PAYMENT_TARGETPAY_PAYMENT_CANCELLED','MODULE_PAYMENT_TARGETPAY_STATUS','MODULE_PAYMENT_TARGETPAY_SORT_ORDER','MODULE_PAYMENT_TARGETPAY_ZONE','MODULE_PAYMENT_TARGETPAY_ORDER_STATUS_ID','MODULE_PAYMENT_TARGETPAY_TESTACCOUNT','MODULE_PAYMENT_TARGETPAY_ORDER_STATUS_ID_OPEN','MODULE_PAYMENT_TARGETPAY_TARGETPAY_RTLO' , 'MODULE_PAYMENT_TARGETPAY_TRANSACTION_DESCRIPTION', 'MODULE_PAYMENT_TARGETPAY_MERCHANT_TRANSACTION_DESCRIPTION_TEXT',  'MODULE_PAYMENT_TARGETPAY_REPORT_URL' , 'MODULE_PAYMENT_TARGETPAY_RETURN_URL', 'MODULE_PAYMENT_TARGETPAY_EMAIL_ORDER_INIT','MODULE_PAYMENT_TARGETPAY_REPAIR_IP');
+		return array('MODULE_PAYMENT_TARGETPAY_PAYMENT_ERROR','MODULE_PAYMENT_TARGETPAY_PREPARE_ORDER_STATUS_ID','MODULE_PAYMENT_TARGETPAY_PAYMENT_CANCELLED','MODULE_PAYMENT_TARGETPAY_STATUS','MODULE_PAYMENT_TARGETPAY_SORT_ORDER','MODULE_PAYMENT_TARGETPAY_ZONE','MODULE_PAYMENT_TARGETPAY_ORDER_STATUS_ID','MODULE_PAYMENT_TARGETPAY_TESTACCOUNT','MODULE_PAYMENT_TARGETPAY_ORDER_STATUS_ID_OPEN','MODULE_PAYMENT_TARGETPAY_TARGETPAY_RTLO' , 'MODULE_PAYMENT_TARGETPAY_TRANSACTION_DESCRIPTION', 'MODULE_PAYMENT_TARGETPAY_MERCHANT_TRANSACTION_DESCRIPTION_TEXT',  'MODULE_PAYMENT_TARGETPAY_REPORT_URL' ,'MODULE_PAYMENT_TARGETPAY_RETURN_URL', 'MODULE_PAYMENT_TARGETPAY_EMAIL_ORDER_INIT', 'MODULE_PAYMENT_TARGETPAY_REPAIR_IP', 'MODULE_PAYMENT_TARGETPAY_METHODS');
 	}
 }
 
