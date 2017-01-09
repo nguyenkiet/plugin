@@ -10,6 +10,8 @@
 
 use OSC\OM\OSCOM;
 use OSC\OM\Registry;
+use OSC\OM\HTML;
+
 
 require_once"targetpay/TargetPayIdeal.class.php";
 
@@ -173,8 +175,8 @@ class targetpay
 			$selection = array( 'id' => $this->code,
 					'module' => $this->title, // $this->title . " ".MODULE_PAYMENT_TARGETPAY_TEXT_INFO
 					'fields' => array(
-							array(  'title' => tep_image('images/icons/targetpay.png', '', '', '', 'align=absmiddle'), // .MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION
-									'field' => tep_draw_pull_down_menu('bankID', $issuers, '', 'onChange="check_targetpay()"')
+							array(  'title' => HTML::image('images/icons/targetpay.png', '', '', '', 'align=absmiddle'), // .MODULE_PAYMENT_TARGETPAY_TEXT_ISSUER_SELECTION
+									'field' => HTML::selectField('bankID', $issuers, '', 'onChange="check_targetpay()"')
 							)
 					),
 					'issuers' => $issuers
@@ -330,7 +332,7 @@ class targetpay
 	 * @param string $parameters
 	 * @return unknown
 	 */
-	function insert_multible($table, $data, $action = 'insert', $parameters = '') {
+	function insert_array_data($table, $data, $action = 'insert', $parameters = '') {
 		reset($data);
 		$OSCOM_Db = Registry::get('Db');
 		if ($action == 'insert') {
@@ -356,6 +358,7 @@ class targetpay
 			$query = substr($query, 0, -2) . ')';
 		} elseif ($action == 'update') {
 			$query = 'update ' . $table . ' set ';
+			reset($data);
 			while (list($columns, $value) = each($data)) {
 				switch ((string)$value) {
 					case 'now()':
@@ -371,21 +374,23 @@ class targetpay
 			}
 			$query = substr($query, 0, -2) . ' where ' . $parameters;
 		}
-
+		
 		$query_statement = $OSCOM_Db->prepare($query);
 		// bind parameters
-		while (list($columns, $value) = each($data)) {
+		reset($data);
+		while (list($columns, $value) = each($data)){			
 			switch ((string) $value) {
 				case 'now()':
+					$query_statement->bindValue(":$columns", time());
 					break;
 				case 'null':
+					$query_statement->bindNull(":$columns");
 					break;
 				default:
 					$query_statement->bindValue(":$columns", $value);
 					break;
 			}
 		}
-
 		return $query_statement->execute();
 	}
 	/**
@@ -405,20 +410,24 @@ class targetpay
 				$query_statement->bindInt(":orders_id", (int)$order_id);
 				$query_statement->execute();
 				$curr = $query_statement->fetch();
-
+				
 				if (($curr['currency'] != $order->info['currency']) || ($cartID != substr($cart_TargetPay_ID, 0, strlen($cartID))) ) {
 					$query_statement = $OSCOM_Db->prepare("select orders_id from :table_orders_status_history where orders_id = :orders_id limit 1");
 					$query_statement->bindInt(":orders_id", (int)$order_id);
 					$query_statement->execute();
 					$check_query = $query_statement->fetchAll();
-						
-					if ($check_query == false || empty($check_query)) {
-						$OSCOM_Db->prepare('delete from :table_orders where orders_id = "' . (int)$order_id . '"')->execute();
-						$OSCOM_Db->prepare('delete from :table_orders_total where orders_id = "' . (int)$order_id . '"')->execute();
-						$OSCOM_Db->prepare('delete from :table_orders_status_history where orders_id = "' . (int)$order_id . '"')->execute();
-						$OSCOM_Db->prepare('delete from :table_orders_products where orders_id = "' . (int)$order_id . '"')->execute();
-						$OSCOM_Db->prepare('delete from :table_orders_products_attributes where orders_id = "' . (int)$order_id . '"')->execute();
-						$OSCOM_Db->prepare('delete from :table_orders_products_download where orders_id = "' . (int)$order_id . '"')->execute();
+					
+					if ($check_query == false || empty($check_query)) {						
+						$statement_query = $OSCOM_Db->prepare("
+								delete from :table_orders where orders_id = :orders_id;
+								delete from :table_orders_total where orders_id = :orders_id;
+								delete from :table_orders_status_history where orders_id = :orders_id;
+								delete from :table_orders_products where orders_id = :orders_id;
+								delete from :table_orders_products_attributes where orders_id = :orders_id;
+								delete from :table_orders_products_download where orders_id = :orders_id;
+							");
+						$query_statement->bindInt(":orders_id", (int)$order_id);
+						$query_statement->execute();
 					}
 					$insert_order = true;
 				}
@@ -436,11 +445,11 @@ class targetpay
 							for ($i=0, $n=sizeof($GLOBALS[$class]->output); $i<$n; $i++) {
 								if (tep_not_null($GLOBALS[$class]->output[$i]['title']) && tep_not_null($GLOBALS[$class]->output[$i]['text'])) {
 									$order_totals[] = array(
-											'code' => $GLOBALS[$class]->code,
-											'title' => $GLOBALS[$class]->output[$i]['title'],
-											'text' => $GLOBALS[$class]->output[$i]['text'],
-											'value' => $GLOBALS[$class]->output[$i]['value'],
-											'sort_order' => $GLOBALS[$class]->sort_order
+										'code' => $GLOBALS[$class]->code,
+										'title' => $GLOBALS[$class]->output[$i]['title'],
+										'text' => $GLOBALS[$class]->output[$i]['text'],
+										'value' => $GLOBALS[$class]->output[$i]['value'],
+										'sort_order' => $GLOBALS[$class]->sort_order
 									);
 								}
 							}
@@ -490,7 +499,7 @@ class targetpay
 						'currency_value' => $order->info['currency_value']
 				);
 
-				$this->insert_multible(":table_orders", $sql_data_array);
+				$this->insert_array_data(":table_orders", $sql_data_array);
 
 				$query_statement = $OSCOM_Db->prepare("select max(orders_id) from :table_orders");
 				$query_statement->execute();
@@ -506,7 +515,7 @@ class targetpay
 							'class' => $order_totals[$i]['code'],
 							'sort_order' => $order_totals[$i]['sort_order']
 					);
-					$this->insert_multible(":table_orders_total", $sql_data_array);
+					$this->insert_array_data(":table_orders_total", $sql_data_array);
 				}
 
 				for ($i=0, $n=sizeof($order->products); $i<$n; $i++) {
@@ -521,13 +530,13 @@ class targetpay
 							'products_quantity' => $order->products[$i]['qty']
 					);
 
-					$this->insert_multible(":table_orders_products", $sql_data_array);
+					$this->insert_array_data(":table_orders_products", $sql_data_array);
 
 					$query_statement = $OSCOM_Db->prepare("select max(orders_products_id) from :table_orders_products");
 					$query_statement->execute();
 					$order_product = $query_statement->fetch();
 					$order_products_id = $order_product['orders_products_id'];
-						
+					
 					$attributes_exist = '0';
 					if (isset($order->products[$i]['attributes'])) {
 						$attributes_exist = '1';
@@ -544,23 +553,23 @@ class targetpay
 														and pa.options_values_id = poval.products_options_values_id
 														and popt.language_id = :language_id
 														and poval.language_id = popt.language_id";
-
+								
 								$query_statement = $OSCOM_Db->prepare($attributes_query);
 								$query_statement->bindValue(":products_id", $order->products[$i]['id']);
 								$query_statement->bindValue(":options_id", $order->products[$i]['attributes'][$j]['option_id']);
 								$query_statement->bindValue(":options_values_id", $order->products[$i]['attributes'][$j]['value_id']);
 								$query_statement->bindValue(":language_id", $languages_id);
-								$query_statement->execute();
+								$query_statement->execute();								
 								$attributes_values = $query_statement->fetchAll();
 							} else {
-								$attributes_query = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix
-										from :table_products_options popt, :table_products_options_values poval, :table_products_attributes pa
-										where
+								$attributes_query = "select popt.products_options_name, poval.products_options_values_name, pa.options_values_price, pa.price_prefix 
+										from :table_products_options popt, :table_products_options_values poval, :table_products_attributes pa 
+										where 
 										pa.products_id = '" . $order->products[$i]['id'] . "'
 										and pa.options_id = :options_id
-										and pa.options_id = popt.products_options_id
+										and pa.options_id = popt.products_options_id 
 										and pa.options_values_id = :options_values_id
-										and pa.options_values_id = poval.products_options_values_id
+										and pa.options_values_id = poval.products_options_values_id 
 										and popt.language_id = :language_id
 										and poval.language_id = :language_id";
 								$query_statement = $OSCOM_Db->prepare($attributes_query);
@@ -581,7 +590,7 @@ class targetpay
 									'price_prefix' => $attributes_values['price_prefix']
 							);
 
-							$this->insert_multible(":table_orders_products_attributes", $sql_data_array);
+							$this->insert_array_data(":table_orders_products_attributes", $sql_data_array);
 
 							if ((DOWNLOAD_ENABLED == 'true') && isset($attributes_values['products_attributes_filename']) && tep_not_null($attributes_values['products_attributes_filename'])) {
 								$sql_data_array = array(
@@ -592,7 +601,7 @@ class targetpay
 										'download_count' => $attributes_values['products_attributes_maxcount']
 								);
 
-								$this->insert_multible(":table_orders_products_download", $sql_data_array);
+								$this->insert_array_data(":table_orders_products_download", $sql_data_array);
 							}
 						}
 					}
@@ -672,8 +681,8 @@ class targetpay
 	{
 		global $order, $messageStack;
 		$OSCOM_Db = Registry::get('Db');
-
-		if(MODULE_PAYMENT_TARGETPAY_REPAIR_ORDER === true) {
+		
+		if(MODULE_PAYMENT_TARGETPAY_REPAIR_ORDER === true) { 
 			return false;
 		}
 		$this->transactionID = $_GET['trxid'];
@@ -746,7 +755,7 @@ class targetpay
 		echo 'after process komt hier';
 		return false;
 	}
-
+ 
 	/**
 	 * @desc checks installation of module
 	 */
@@ -754,14 +763,14 @@ class targetpay
 	{
 		return defined('MODULE_PAYMENT_TARGETPAY_STATUS');
 		/*
-		 if (!isset($this->_check)) {
+		if (!isset($this->_check)) {			
 			$OSCOM_Db = Registry::get('Db');
-			$check_query = $OSCOM_Db->prepare("select configuration_value from :table_configuration where configuration_key = 'MODULE_PAYMENT_TARGETPAY_STATUS'");
+			$check_query = $OSCOM_Db->prepare("select configuration_value from :table_configuration where configuration_key = 'MODULE_PAYMENT_TARGETPAY_STATUS'");			
 			$check_query->execute();
 			$this->_check = $check_query->fetch() !== false;
-			}
-			return $this->_check;
-			*/
+		}
+		return $this->_check;
+		*/
 	}
 
 	/**
@@ -799,7 +808,7 @@ class targetpay
 		$query_statement = $OSCOM_Db->prepare("select max(orders_status_id) as status_id from :table_orders_status");
 		$query_statement->execute();
 		$status = $query_statement->fetch();
-
+		
 		$status_id = $status['status_id']+1;
 		$cancel = $status['status_id']+2;
 		$error = $status['status_id']+3;
@@ -813,13 +822,13 @@ class targetpay
 
 		$OSCOM_Db->prepare("insert into :table_configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
 							values ('Set Paid Order Status', 'MODULE_PAYMENT_TARGETPAY_PREPARE_ORDER_STATUS_ID', '" . $status_id . "', 'Set the status of prepared orders to success', '6', '0', 'tep_cfg_pull_down_order_statuses(', 'tep_get_order_status_name', now())"
-				)->execute();
-				$OSCOM_Db->prepare("insert into :table_configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
+						)->execute();
+		$OSCOM_Db->prepare("insert into :table_configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
 							values ('Set Paid Order Status', 'MODULE_PAYMENT_TARGETPAY_PAYMENT_CANCELLED', '" . $cancel . "', 'The payment is cancelled by the enduser', '6', '0', 'tep_cfg_pull_down_order_statuses(', 'tep_get_order_status_name', now())"
 						)->execute();
-						$OSCOM_Db->prepare("insert into :table_configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
+		$OSCOM_Db->prepare("insert into :table_configuration (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, set_function, use_function, date_added)
 							values ('Set Paid Order Status', 'MODULE_PAYMENT_TARGETPAY_PAYMENT_ERROR', '" . $error . "', 'The payment is cancelled by the enduser', '6', '0', 'tep_cfg_pull_down_order_statuses(', 'tep_get_order_status_name', now())"
-								)->execute();
+						)->execute();
 	}
 
 	function remove()
