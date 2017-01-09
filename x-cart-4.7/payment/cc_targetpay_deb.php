@@ -40,146 +40,147 @@
  * @link       http://www.targetpay.com/
  * @see        ____file_see____
  */
-function clean($str) {
-	$str = @trim($str);
-		
-	if(get_magic_quotes_gpc()) {
-		$str = stripslashes($str);
-	}
-		
-	return mysql_real_escape_string(($str));
+function clean($str) 
+{
+    $str = @trim($str);
+        
+    if (get_magic_quotes_gpc()) {
+        $str = stripslashes($str);
+    }
+    return mysql_real_escape_string(($str));
 }
 
 require_once './auth.php';
-	
+    
 $module_params = func_query_first("SELECT * FROM $sql_tbl[ccprocessors] WHERE processor='cc_targetpay_deb.php'");
 
 if (!isset($REQUEST_METHOD)) {
     $REQUEST_METHOD = $_SERVER["REQUEST_METHOD"];
 }
-	
+    
 if (!func_is_active_payment('cc_targetpay_deb.php')) {
-	exit;	
+    exit;    
 }
 
 
 if ($REQUEST_METHOD == "GET" && isset($_GET['trxid'])  && ($_GET['return'] == 'success' || $_GET['return'] == 'cancel') || $_GET['return'] == 'callback') {
 
-	// Load X-Cart data
-	x_load("http");
-	x_session_register("cart");
-	x_session_register("secure_oid");
+    // Load X-Cart data
+    x_load("http");
+    x_session_register("cart");
+    x_session_register("secure_oid");
 
-	// X-Cart data for bill | REQUIRED!
-	$bill_output = array();
-	$trxid = ((isset($_GET['trxid']) && !empty($_GET['trxid'])) ? $_GET['trxid'] : ((isset($_POST['trxid']) && !empty($_POST['trxid']))? $_POST['trxid'] : false));
-	
-	$sql = "SELECT * FROM `targetpay_sales` WHERE `targetpay_txid` = '".$trxid."'";
-	$result = db_query($sql);
-	if(mysql_num_rows($result) != 1) {
-		echo 'Error, no entry found with targetpay id: '.htmlspecialchars($trxid);
-		exit;
-	}
-	
-		
-	$tpOrder = mysql_fetch_object($result);
+    // X-Cart data for bill | REQUIRED!
+    $bill_output = array();
+    $trxid = ((isset($_GET['trxid']) && !empty($_GET['trxid'])) ? $_GET['trxid'] : ((isset($_POST['trxid']) && !empty($_POST['trxid']))? $_POST['trxid'] : false));
+    
+    $sql = "SELECT * FROM `targetpay_sales` WHERE `targetpay_txid` = '".$trxid."'";
+    $result = db_query($sql);
+    if (mysql_num_rows($result) != 1) {
+        echo 'Error, no entry found with targetpay id: '.htmlspecialchars($trxid);
+        exit;
+    }
+    
+        
+    $tpOrder = mysql_fetch_object($result);
 
-	require_once(dirname(__FILE__).'/targetpay.class.php');
-	$targetPay = new TargetPayCore("DEB",$module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f","nl",$testmode);
-	
-	$paid = $targetPay->checkPayment($trxid);
-	if($paid) {
-		$status = 'success';
-		$status_code = 1;
-		$bill_message = 'Accepted';
-	} else {
-		$status_code = 2;
-		$status = 'open';
-		$bill_message = $targetPay->getErrorMessage();
-		
-	}
-	$sessionID_check = db_query("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = $sql_tbl[cc_pp3_data] AND COLUMN_NAME = 'sessid')");        
+    include_once dirname(__FILE__).'/targetpay.class.php';
+    $targetPay = new TargetPayCore("DEB", $module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f", "nl", $testmode);
+    
+    $paid = $targetPay->checkPayment($trxid);
+    if ($paid) {
+        $status = 'success';
+        $status_code = 1;
+        $bill_message = 'Accepted';
+    } else {
+        $status_code = 2;
+        $status = 'open';
+        $bill_message = $targetPay->getErrorMessage();
+        
+    }
+    $sessionID_check = db_query("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = $sql_tbl[cc_pp3_data] AND COLUMN_NAME = 'sessid')");        
     $sessionName = 'sessid';
     if ($sessionID_check) {
         $sessionName = 'sessionid';
     }
-	
-	$bill_output['sessid']	= $sessionid	;
-	$bill_output["billmes"] = $status . " (".date("d/m/Y h:i:s").")";
-	$bill_output["code"] 	= $status_code;
-	
-	// Update payment method
-	db_query("UPDATE $sql_tbl[orders] SET payment_method = 'Targetpay - Mr Cash' WHERE orderid='". clean($tpOrder->order_id) ."' LIMIT 1");
-	$skey = $tpOrder->order_id;
+    
+    $bill_output['sessid']    = $sessionid    ;
+    $bill_output["billmes"] = $status . " (".date("d/m/Y h:i:s").")";
+    $bill_output["code"]     = $status_code;
+    
+    // Update payment method
+    db_query("UPDATE $sql_tbl[orders] SET payment_method = 'Targetpay - Mr Cash' WHERE orderid='". clean($tpOrder->order_id) ."' LIMIT 1");
+    $skey = $tpOrder->order_id;
 
-	if($_GET['return'] == 'success' || $_GET['return'] == 'cancel') {
-		if($paid) {
-			if(!function_exists(func_change_order_status)) {
-				require_once($xcart_dir . '/include/func/func.order.php');
-			}
-			func_change_order_status($tpOrder->order_id, 'Q');
-		} else {
-			$sessionID_check = "IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = $sql_tbl[cc_pp3_data] AND COLUMN_NAME = 'sessid')";
-			$sessionName = 'sessionid';
-			if ($sessionID_check) {
-				$sessionName = 'sessid';
-			}
-			$query = db_query("SELECT * FROM $sql_tbl[cc_pp3_data] WHERE ref='$skey'");
-			$qResult = db_fetch_array($query);
-			db_query("UPDATE $sql_tbl[cc_pp3_data] SET param1 = 'error_message.php?$XCART_SESSION_NAME=$qResult[$sessionName]&error=error_ccprocessor_error&bill_message=Order+is+cancelled+', param3 = 'error' , is_callback = 'N' WHERE ref = '$skey'");
-		}
-		require($xcart_dir . "/payment/payment_ccend.php");
-		exit;
-	} else if($_GET['return'] == 'callback') {
-		//Update status to "processed"
-		if($paid) {
-			func_change_order_status($tpOrder->order_id, 'Q');
-			echo 'Paid...';
-		} else {
-			func_change_order_status($tpOrder->order_id, 'D');
-			echo 'Received';
-		}
-		die();
-	}
+    if ($_GET['return'] == 'success' || $_GET['return'] == 'cancel') {
+        if ($paid) {
+            if (!function_exists(func_change_order_status)) {
+                include_once $xcart_dir . '/include/func/func.order.php';
+            }
+            func_change_order_status($tpOrder->order_id, 'Q');
+        } else {
+            $sessionID_check = "IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = $sql_tbl[cc_pp3_data] AND COLUMN_NAME = 'sessid')";
+            $sessionName = 'sessionid';
+            if ($sessionID_check) {
+                $sessionName = 'sessid';
+            }
+            $query = db_query("SELECT * FROM $sql_tbl[cc_pp3_data] WHERE ref='$skey'");
+            $qResult = db_fetch_array($query);
+            db_query("UPDATE $sql_tbl[cc_pp3_data] SET param1 = 'error_message.php?$XCART_SESSION_NAME=$qResult[$sessionName]&error=error_ccprocessor_error&bill_message=Order+is+cancelled+', param3 = 'error' , is_callback = 'N' WHERE ref = '$skey'");
+        }
+        include $xcart_dir . "/payment/payment_ccend.php";
+        exit;
+    } else if ($_GET['return'] == 'callback') {
+        //Update status to "processed"
+        if ($paid) {
+            func_change_order_status($tpOrder->order_id, 'Q');
+            echo 'Paid...';
+        } else {
+            func_change_order_status($tpOrder->order_id, 'D');
+            echo 'Received';
+        }
+        die();
+    }
 
 } else {
-    if (!defined('XCART_START')) { header("Location: ../"); die("Access denied"); }
-	
-	x_load("http");
-	x_session_register("cart");
-	x_session_register("secure_oid");
+    if (!defined('XCART_START')) {
+        header("Location: ../"); 
+        die("Access denied"); 
+    }
+    
+    x_load("http");
+    x_session_register("cart");
+    x_session_register("secure_oid");
 
-	
-	require_once(dirname(__FILE__).'/targetpay.class.php');
-	if($module_params['testmode'] == 'Y'){
-		$testmode = true;
-	}else{
-		$testmode = false;
-	}
-	
-	$targetPay = new TargetPayCore("DEB",$module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f","nl",$testmode);
-	
-	$amount = round (100*$cart['total_cost']);
-	$targetPay->setAmount ($amount);
-	$targetPay->setDescription ( 'Order #' . $secure_oid[0] );
-	$targetPay->setReturnUrl ($current_location."/payment/cc_targetpay_deb.php?return=success");
-	$targetPay->setCancelUrl ($current_location."/payment/cc_targetpay_deb.php?return=cancel");
-	$targetPay->setReportUrl ($current_location."/payment/cc_targetpay_deb.php?return=callback");
+    
+    include_once dirname(__FILE__).'/targetpay.class.php';
+    if ($module_params['testmode'] == 'Y') {
+        $testmode = true;
+    } else {
+        $testmode = false;
+    }
+    
+    $targetPay = new TargetPayCore("DEB", $module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f", "nl", $testmode);
+    
+    $amount = round(100*$cart['total_cost']);
+    $targetPay->setAmount($amount);
+    $targetPay->setDescription('Order #' . $secure_oid[0]);
+    $targetPay->setReturnUrl($current_location."/payment/cc_targetpay_deb.php?return=success");
+    $targetPay->setCancelUrl($current_location."/payment/cc_targetpay_deb.php?return=cancel");
+    $targetPay->setReportUrl($current_location."/payment/cc_targetpay_deb.php?return=callback");
 
-	$url = $targetPay->startPayment(true);
+    $url = $targetPay->startPayment(true);
 
-	$sessionID_check = db_query("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = $sql_tbl[cc_pp3_data] AND COLUMN_NAME = 'sessid')");        
+    $sessionID_check = db_query("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = $sql_tbl[cc_pp3_data] AND COLUMN_NAME = 'sessid')");        
     $sessionName = 'sessid';
     if ($sessionID_check) {
         $sessionName = 'sessionid';
     }
-	
-	if ($url) 
-	{
-		db_query("REPLACE INTO $sql_tbl[cc_pp3_data] (ref,$sessionName,trstat) VALUES ('".addslashes($secure_oid[0])."','".$XCARTSESSID."','TPIDE|".implode('|',$secure_oid)."')");
-		
-		
-		$sql = "CREATE TABLE IF NOT EXISTS `targetpay_sales` (
+    
+    if ($url) {
+        db_query("REPLACE INTO $sql_tbl[cc_pp3_data] (ref,$sessionName,trstat) VALUES ('".addslashes($secure_oid[0])."','".$XCARTSESSID."','TPIDE|".implode('|', $secure_oid)."')");
+        
+        $sql = "CREATE TABLE IF NOT EXISTS `targetpay_sales` (
 				  `id` int(11) NOT NULL AUTO_INCREMENT,
 				  `order_id` varchar(64) NOT NULL DEFAULT '',
 				  `method` varchar(6) DEFAULT NULL,
@@ -190,18 +191,16 @@ if ($REQUEST_METHOD == "GET" && isset($_GET['trxid'])  && ($_GET['return'] == 's
 				  PRIMARY KEY (`id`),
 				  KEY `order_id` (`order_id`)
 				) ENGINE=InnoDB";
-		db_query($sql);
-		
-		$sql = "INSERT INTO `targetpay_sales` SET `order_id` = '".$secure_oid[0]."', `method` = 'DEB', `amount` = '".$amount."', `targetpay_txid` = '".$targetPay->getTransactionId()."'";
-		db_query($sql);
-		
-		func_header_location($url);
-		exit;
-	}
-	else
-	{
-		echo $targetPay->getErrorMessage();
-	}
+        db_query($sql);
+        
+        $sql = "INSERT INTO `targetpay_sales` SET `order_id` = '".$secure_oid[0]."', `method` = 'DEB', `amount` = '".$amount."', `targetpay_txid` = '".$targetPay->getTransactionId()."'";
+        db_query($sql);
+        
+        func_header_location($url);
+        exit;
+    } else {
+        echo $targetPay->getErrorMessage();
+    }
 }
 exit;
 ?>
