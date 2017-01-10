@@ -52,13 +52,13 @@ function clean($str)
 
 require_once './auth.php';
     
-$module_params = func_query_first("SELECT * FROM $sql_tbl[ccprocessors] WHERE processor='cc_targetpay_deb.php'");
+$module_params = func_query_first("SELECT * FROM $sql_tbl[ccprocessors] WHERE processor='cc_targetpay_credit.php'");
 
 if (!isset($REQUEST_METHOD)) {
     $REQUEST_METHOD = $_SERVER["REQUEST_METHOD"];
 }
     
-if (!func_is_active_payment('cc_targetpay_deb.php')) {
+if (!func_is_active_payment('cc_targetpay_credit.php')) {
     exit;    
 }
 
@@ -85,7 +85,7 @@ if ($REQUEST_METHOD == "GET" && isset($_GET['trxid'])  && ($_GET['return'] == 's
     $tpOrder = mysql_fetch_object($result);
 
     include_once dirname(__FILE__).'/targetpay.class.php';
-    $targetPay = new TargetPayCore("DEB", $module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f", "nl", $testmode);
+    $targetPay = new TargetPayCore("CC", $module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f", "nl", $testmode);
     
     $paid = $targetPay->checkPayment($trxid);
     if ($paid) {
@@ -109,7 +109,7 @@ if ($REQUEST_METHOD == "GET" && isset($_GET['trxid'])  && ($_GET['return'] == 's
     $bill_output["code"]     = $status_code;
     
     // Update payment method
-    db_query("UPDATE $sql_tbl[orders] SET payment_method = 'Targetpay - Mr Cash' WHERE orderid='". clean($tpOrder->order_id) ."' LIMIT 1");
+    db_query("UPDATE $sql_tbl[orders] SET payment_method = 'Targetpay - Credit Card' WHERE orderid='". clean($tpOrder->order_id) ."' LIMIT 1");
     $skey = $tpOrder->order_id;
 
     if ($_GET['return'] == 'success' || $_GET['return'] == 'cancel') {
@@ -162,14 +162,14 @@ if ($REQUEST_METHOD == "GET" && isset($_GET['trxid'])  && ($_GET['return'] == 's
         $testmode = false;
     }
     
-    $targetPay = new TargetPayCore("DEB", $module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f", "nl", $testmode);
+    $targetPay = new TargetPayCore("CC", $module_params['param01'], "382a92214fcbe76a32e22a30e1e9dd9f", "nl", $testmode);
     
     $amount = round(100*$cart['total_cost']);
     $targetPay->setAmount($amount);
     $targetPay->setDescription('Order #' . $secure_oid[0]);
-    $targetPay->setReturnUrl($current_location."/payment/cc_targetpay_deb.php?return=success");
-    $targetPay->setCancelUrl($current_location."/payment/cc_targetpay_deb.php?return=cancel");
-    $targetPay->setReportUrl($current_location."/payment/cc_targetpay_deb.php?return=callback");
+    $targetPay->setReturnUrl($current_location."/payment/cc_targetpay_credit.php?return=success");
+    $targetPay->setCancelUrl($current_location."/payment/cc_targetpay_credit.php?return=cancel");
+    $targetPay->setReportUrl($current_location."/payment/cc_targetpay_credit.php?return=callback");
 
     $url = $targetPay->startPayment(true);
 
@@ -195,7 +195,7 @@ if ($REQUEST_METHOD == "GET" && isset($_GET['trxid'])  && ($_GET['return'] == 's
 				) ENGINE=InnoDB";
         db_query($sql);
         
-        $sql = "INSERT INTO `targetpay_sales` SET `order_id` = '".$secure_oid[0]."', `method` = 'DEB', `amount` = '".$amount."', `targetpay_txid` = '".$targetPay->getTransactionId()."'";
+        $sql = "INSERT INTO `targetpay_sales` SET `order_id` = '".$secure_oid[0]."', `method` = 'CC', `amount` = '".$amount."', `targetpay_txid` = '".$targetPay->getTransactionId()."'";
         db_query($sql);
         
         func_header_location($url);

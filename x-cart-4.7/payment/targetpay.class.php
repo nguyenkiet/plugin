@@ -25,20 +25,20 @@ class TargetPayCore
 
     const     MIN_AMOUNT                = 84;
 
-    const     ERR_NO_AMOUNT                = "Geen bedrag meegegeven | No amount given";
+    const     ERR_NO_AMOUNT             = "Geen bedrag meegegeven | No amount given";
     const     ERR_NO_DESCRIPTION        = "Geen omschrijving meegegeven | No description given";
-    const     ERR_AMOUNT_TOO_LOW         = "Bedrag is te laag | Amount is too low";
-    const     ERR_NO_RTLO                = "Geen rtlo (layoutcode TargetPay) bekend; controleer de module instellingen | No rtlo (layoutcode TargetPay) filled in, check the module settings";
-    const     ERR_NO_TXID                = "Er is een onjuist transactie ID opgegeven | An incorrect transaction ID was given";
-    const     ERR_NO_RETURN_URL            = "Geen of ongeldige return URL | No or invalid return URL";
-    const     ERR_NO_REPORT_URL            = "Geen of ongeldige report URL | No or invalid report URL";
-    const     ERR_IDEAL_NO_BANK            = "Geen bank geselecteerd voor iDEAL | No bank selected for iDEAL";
-    const     ERR_SOFORT_NO_COUNTRY        = "Geen land geselecteerd voor Sofort | No country selected for Sofort";
-    const     ERR_PAYBYINVOICE            = "Fout bij achteraf betalen|Error with paybyinvoice";
+    const     ERR_AMOUNT_TOO_LOW        = "Bedrag is te laag | Amount is too low";
+    const     ERR_NO_RTLO               = "Geen rtlo (layoutcode TargetPay) bekend; controleer de module instellingen | No rtlo (layoutcode TargetPay) filled in, check the module settings";
+    const     ERR_NO_TXID               = "Er is een onjuist transactie ID opgegeven | An incorrect transaction ID was given";
+    const     ERR_NO_RETURN_URL         = "Geen of ongeldige return URL | No or invalid return URL";
+    const     ERR_NO_REPORT_URL         = "Geen of ongeldige report URL | No or invalid report URL";
+    const     ERR_IDEAL_NO_BANK         = "Geen bank geselecteerd voor iDEAL | No bank selected for iDEAL";
+    const     ERR_SOFORT_NO_COUNTRY     = "Geen land geselecteerd voor Sofort | No country selected for Sofort";
+    const     ERR_PAYBYINVOICE          = "Fout bij achteraf betalen|Error with paybyinvoice";
 
     // Constant array's
 
-    protected $paymentOptions            = array("AUTO", "IDE", "MRC", "DEB", "WAL");        
+    protected $paymentOptions            = array("AUTO", "IDE", "MRC", "DEB", "WAL", "CC");        
                                                                                 /*  If payMethod is set to 'AUTO' it will decided on the value of bankId
     																			    Then, when requested the bankId list will be filled with
 
@@ -47,23 +47,24 @@ class TargetPayCore
 																				    c) 'DEB' + countrycode for Sofort Banking, e.g. DEB49 for Germany
                                                                                 */
 
-    protected $minimumAmounts            = array("AUTO" => 84, "IDE" => 84, "MRC" => 49, "DEB" => 10, "WAL" => 10);
-    public $descriptions                   = array("IDE" => 'iDEAL', "MRC" => 'Mister Cash', "DEB" => 'Sofort Banking');
+    protected $minimumAmounts            = array("AUTO" => 84, "IDE" => 84, "MRC" => 49, "DEB" => 10, "WAL" => 10, "CC" => 10);
+    public $descriptions                 = array("IDE" => 'iDEAL', "MRC" => 'Mister Cash', "DEB" => 'Sofort Banking', "WAL" => 'Paysafe Card', "CC" => "Credit Card");
 
-    protected $checkAPIs                = array("IDE" => "https://www.targetpay.com/ideal/check",
+    protected $checkAPIs                 = array("IDE" => "https://www.targetpay.com/ideal/check",
                                             "MRC" => "https://www.targetpay.com/mrcash/check",
                                             "DEB" => "https://www.targetpay.com/directebanking/check",
-                                            "WAL" => "http://www.targetpay.com/paysafecard/check"
-                                            );
-
+                                            "WAL" => "http://www.targetpay.com/paysafecard/check",
+											"CC"  => "https://www.targetpay.com/creditcard_atos/check"
+                                         );
+    
     // Variables
 
-    protected $rtlo                      = null;
+    protected $rtlo                     = null;
     protected $testMode                 = false;
 
-    protected $language                    = "nl";
+    protected $language                 = "nl";
     protected $payMethod                = "AUTO"; // Payment Method
-    protected $currency                    = "EUR";
+    protected $currency                 = "EUR";
 
     protected $bankId                   = null;
     protected $appId                    = null;
@@ -71,17 +72,16 @@ class TargetPayCore
     protected $description              = null;
     protected $returnUrl                = null;        // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
     protected $cancelUrl                = null;        // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
-    protected $reportUrl                 = null;     // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
+    protected $reportUrl                = null;     // When using the AUTO-setting; %payMethod% will be replaced by the actual payment method just before starting the payment
 
-    protected $bankUrl                    = null;
+    protected $bankUrl                  = null;
 
-    protected $transactionId              = null;
-    protected $paidStatus                 = false;
-    protected $consumerInfo               = array();
+    protected $transactionId            = null;
+    protected $paidStatus               = false;
+    protected $consumerInfo             = array();
 
-    protected $errorMessage                = null;
-
-    protected $parameters                 = array();     // Additional parameters
+    protected $errorMessage             = null;
+    protected $parameters               = array();     // Additional parameters
 
     /**
      *    Constructor
@@ -354,7 +354,15 @@ class TargetPayCore
                 $this->bankId = false;
                 $this->countryId = substr($bankId, 3, 2);
                 return true;
-            }
+            }elseif ($bankId == "CC") {
+				$this->payMethod = "CC";
+				$this->bankId = false;
+				return true;
+			}elseif ($bankId == "WAL") {
+				$this->payMethod = "WAL";
+				$this->bankId = false;
+				return true;
+			}
         } else {
             $this->bankId = substr($bankId, 0, 4);
             return true;
