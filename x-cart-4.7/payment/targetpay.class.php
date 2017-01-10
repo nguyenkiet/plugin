@@ -79,7 +79,7 @@ class TargetPayCore
     protected $transactionId            = null;
     protected $paidStatus               = false;
     protected $consumerInfo             = array();
-
+    
     protected $errorMessage             = null;
     protected $parameters               = array();     // Additional parameters
 
