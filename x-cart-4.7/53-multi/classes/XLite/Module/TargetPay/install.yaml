@@ -1,0 +1,80 @@
+# vim: set ts=2 sw=2 sts=2 et:
+#
+# Fixtures
+#
+# Copyright (c) 2011-present Qualiteam software Ltd. All rights reserved.
+# See https://www.x-cart.com/license-agreement.html for license details.
+
+XLite\Model\Payment\Method:
+  - service_name: iDEAL
+    class: Module\TargetPay\Model\iDEAL
+    type: C
+    orderby: -104
+    translations:
+      - code: en
+        name: 'TargetPay - iDEAL'
+        title: 'iDEAL'
+    settings:
+      - name: rtlo
+      - name: mode
+        value: live
+
+
+XLite\Model\Payment\Method:
+  - service_name: Bancontact
+    class: Module\TargetPay\Model\Bancontact
+    type: C
+    orderby: -103
+    translations:
+      - code: en
+        name: 'TargetPay - Bancontact'
+        title: 'Bancontact'
+    settings:
+      - name: rtlo
+      - name: mode
+        value: live
+
+
+XLite\Model\Payment\Method:
+  - service_name: Creditcard
+    class: Module\TargetPay\Model\Creditcard
+    type: C
+    orderby: -102
+    translations:
+      - code: en
+        name: 'TargetPay - Creditcard'
+        title: 'Creditcard'
+    settings:
+      - name: rtlo
+      - name: mode
+        value: live
+
+
+XLite\Model\Payment\Method:
+  - service_name: Paysafe
+    class: Module\TargetPay\Model\Paysafe
+    type: C
+    orderby: -101
+    translations:
+      - code: en
+        name: 'TargetPay - Paysafe'
+        title: 'Paysafe'
+    settings:
+      - name: rtlo
+      - name: mode
+        value: live
+
+
+XLite\Model\Payment\Method:
+  - service_name: Sofort
+    class: Module\TargetPay\Model\Sofort
+    type: C
+    orderby: -100
+    translations:
+      - code: en
+        name: 'TargetPay - Sofort'
+        title: 'Sofort'
+    settings:
+      - name: rtlo
+      - name: mode
+        value: live
