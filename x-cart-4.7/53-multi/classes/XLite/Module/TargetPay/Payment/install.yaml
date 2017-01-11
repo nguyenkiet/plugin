@@ -6,7 +6,7 @@
 # See https://www.x-cart.com/license-agreement.html for license details.
 
 XLite\Model\Payment\Method:
-  - service_name: 'Targetpay - iDEAL'
+  - service_name: 'Targetpay.iDEAL'
     class: Module\TargetPay\Payment\Processor\iDEAL
     type: C
     orderby: -104
@@ -14,13 +14,13 @@ XLite\Model\Payment\Method:
     translations:
       - code: en
         name: 'TargetPay - iDEAL'
-        title: 'iDEAL'
+        title: 'TargetPay - iDEAL'
     settings:
       - name: rtlo
       - name: mode
         value: live
 
-  - service_name: 'Targetpay - Bancontact'
+  - service_name: 'Targetpay.Bancontact'
     class: Module\TargetPay\Payment\Processor\Bancontact
     type: C
     orderby: -103
@@ -28,14 +28,14 @@ XLite\Model\Payment\Method:
     translations:
       - code: en
         name: 'TargetPay - Bancontact'
-        title: 'Bancontact'
+        title: 'TargetPay - Bancontact'
     settings:
       - name: rtlo
       - name: mode
         value: live
 
 
-  - service_name: 'Targetpay - Creditcard'
+  - service_name: 'Targetpay.Creditcard'
     class: Module\TargetPay\Payment\Processor\Creditcard
     type: C
     orderby: -102
@@ -43,14 +43,14 @@ XLite\Model\Payment\Method:
     translations:
       - code: en
         name: 'TargetPay - Creditcard'
-        title: 'Creditcard'
+        title: 'TargetPay - Creditcard'
     settings:
       - name: rtlo
       - name: mode
         value: live
 
 
-  - service_name: 'Targetpay - Paysafe'
+  - service_name: 'Targetpay.Paysafe'
     class: Module\TargetPay\Payment\Processor\Paysafe
     type: C
     orderby: -101
@@ -58,14 +58,14 @@ XLite\Model\Payment\Method:
     translations:
       - code: en
         name: 'TargetPay - Paysafe'
-        title: 'Paysafe'
+        title: 'TargetPay - Paysafe'
     settings:
       - name: rtlo
       - name: mode
         value: live
 
 
-  - service_name: 'Targetpay - Sofort'
+  - service_name: 'Targetpay.Sofort'
     class: Module\TargetPay\Payment\Processor\Sofort
     type: C
     orderby: -100
@@ -73,7 +73,7 @@ XLite\Model\Payment\Method:
     translations:
       - code: en
         name: 'TargetPay - Sofort'
-        title: 'Sofort'
+        title: 'TargetPay - Sofort'
     settings:
       - name: rtlo
       - name: mode
