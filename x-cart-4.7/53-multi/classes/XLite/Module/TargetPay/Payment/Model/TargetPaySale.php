@@ -3,8 +3,8 @@
 
 /**
  * Copyright (c) 2011-present Qualiteam software Ltd. All rights reserved.
- * See https://www.x-cart.com/license-agreement.html for license details.
- */
+* See https://www.x-cart.com/license-agreement.html for license details.
+*/
 
 namespace XLite\Module\TargetPay\Payment\Model;
 
@@ -14,7 +14,7 @@ namespace XLite\Module\TargetPay\Payment\Model;
  * @Entity
  * @Table  (name="targetpay_sales",
  *      indexes={
- *          @Index (name="range", columns={"order_id", "method"})
+ *          @Index (name="idx_targetpay_sales", columns={"order_id", "method"})
  *      }
  * )
  */
@@ -26,36 +26,36 @@ class TargetPaySale extends \XLite\Model\AEntity
 	 * @Column         (type="integer", options={ "unsigned": true })
 	 */
 	protected $id;
-	
-	
-	/**
-	 * @Column (type="text", length=64)
-	 */
-	protected $order_id;
-	
-	
-	/**
-	 * @Column (type="text", length=10)
-	 */
-	protected $method = '';
-	
+
+
 	/**
 	 * @Column (type="integer")
 	 */
+	protected $order_id;
+
+
+	/**
+	 * @Column (type="string", length=10, nullable=true)
+	 */
+	protected $method = null;
+
+	/**
+	 * @Column (type="integer", nullable=true)
+	 */
 	protected $amount = 0;
-	
+
 	/**
-	 * @Column (type="text", length=64)
+	 * @Column (type="string", length=64, nullable=true)
 	 */
-	protected $targetpay_txid = '';
-	
+	protected $targetpay_txid = null;
+
 	/**
-	 * @Column (type="text", length=128)
+	 * @Column (type="string", length=128, nullable=true)
 	 */
-	protected $targetpay_response = '';
-	
+	protected $targetpay_response = null;
+
 	/**
 	 * @Column (type="datetime")
 	 */
-	protected $paid = '';
+	protected $paid = time();
 }
