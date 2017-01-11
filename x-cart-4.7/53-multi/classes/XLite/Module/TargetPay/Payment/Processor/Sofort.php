@@ -6,13 +6,13 @@
 * See https://www.x-cart.com/license-agreement.html for license details.
 */
 
-namespace XLite\Module\TargetPay\iDEAL\Model;
+namespace XLite\Module\TargetPay\Payment\Processor;
 
-class iDEAL extends \XLite\Model\Payment\Base\WebBased
+class Sofort extends \XLite\Model\Payment\Base\WebBased
 {
 	public function getSettingsWidget()
 	{
-		return 'modules/TargetPay/iDEAL/config.twig';
+		return 'modules/TargetPay/Sofort/config.twig';
 	}
 
 	public function isTestMode(\XLite\Model\Payment\Method $method)

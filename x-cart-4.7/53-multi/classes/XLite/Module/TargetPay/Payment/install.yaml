@@ -7,9 +7,10 @@
 
 XLite\Model\Payment\Method:
   - service_name: iDEAL
-    class: Module\TargetPay\Model\iDEAL
+    class: Module\TargetPay\Payment\Processor\iDEAL
     type: C
     orderby: -104
+    enabled: 1
     translations:
       - code: en
         name: 'TargetPay - iDEAL'
@@ -19,12 +20,11 @@ XLite\Model\Payment\Method:
       - name: mode
         value: live
 
-
-XLite\Model\Payment\Method:
   - service_name: Bancontact
-    class: Module\TargetPay\Model\Bancontact
+    class: Module\TargetPay\Payment\Processor\Bancontact
     type: C
     orderby: -103
+    enabled: 1
     translations:
       - code: en
         name: 'TargetPay - Bancontact'
@@ -35,11 +35,11 @@ XLite\Model\Payment\Method:
         value: live
 
 
-XLite\Model\Payment\Method:
   - service_name: Creditcard
-    class: Module\TargetPay\Model\Creditcard
+    class: Module\TargetPay\Payment\Processor\Creditcard
     type: C
     orderby: -102
+    enabled: 1
     translations:
       - code: en
         name: 'TargetPay - Creditcard'
@@ -50,11 +50,11 @@ XLite\Model\Payment\Method:
         value: live
 
 
-XLite\Model\Payment\Method:
   - service_name: Paysafe
-    class: Module\TargetPay\Model\Paysafe
+    class: Module\TargetPay\Payment\Processor\Paysafe
     type: C
     orderby: -101
+    enabled: 1
     translations:
       - code: en
         name: 'TargetPay - Paysafe'
@@ -65,11 +65,11 @@ XLite\Model\Payment\Method:
         value: live
 
 
-XLite\Model\Payment\Method:
   - service_name: Sofort
-    class: Module\TargetPay\Model\Sofort
+    class: Module\TargetPay\Payment\Processor\Sofort
     type: C
     orderby: -100
+    enabled: 1
     translations:
       - code: en
         name: 'TargetPay - Sofort'

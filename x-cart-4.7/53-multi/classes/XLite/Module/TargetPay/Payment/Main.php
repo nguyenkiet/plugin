@@ -6,7 +6,7 @@
  * See https://www.x-cart.com/license-agreement.html for license details.
  */
 
-namespace XLite\Module\TargetPay;
+namespace XLite\Module\TargetPay\Payment;
 
 /**
  * Main module
@@ -27,7 +27,7 @@ abstract class Main extends \XLite\Module\AModule
      */
     public static function getAuthorName()
     {
-        return 'TargetPay';
+        return 'TargetMedia';
     }
 
     /**
@@ -37,7 +37,7 @@ abstract class Main extends \XLite\Module\AModule
      */
     public static function getModuleName()
     {
-        return 'TargetPay';
+        return 'Target Payment';
     }
 
     /**

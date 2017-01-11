@@ -6,13 +6,13 @@
 * See https://www.x-cart.com/license-agreement.html for license details.
 */
 
-namespace XLite\Module\TargetPay\Paysafe\Model;
+namespace XLite\Module\TargetPay\Payment\Processor;
 
-class Paysafe extends \XLite\Model\Payment\Base\WebBased
+class Creditcard extends \XLite\Model\Payment\Base\WebBased
 {
 	public function getSettingsWidget()
 	{
-		return 'modules/TargetPay/Paysafe/config.twig';
+		return 'modules/TargetPay/Creditcard/config.twig';
 	}
 
 	public function isTestMode(\XLite\Model\Payment\Method $method)

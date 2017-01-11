@@ -6,7 +6,7 @@
 * See https://www.x-cart.com/license-agreement.html for license details.
 */
 
-namespace XLite\Module\TargetPay\Bancontact\Model;
+namespace XLite\Module\TargetPay\Payment\Processor;
 
 class Bancontact extends \XLite\Model\Payment\Base\WebBased
 {
