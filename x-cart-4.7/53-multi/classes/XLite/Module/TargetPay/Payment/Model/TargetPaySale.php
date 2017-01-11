@@ -29,7 +29,7 @@ class TargetPaySale extends \XLite\Model\AEntity
 
 
 	/**
-	 * @Column (type="integer")
+	 * @Column (type="string", length=64)
 	 */
 	protected $order_id;
 
@@ -37,25 +37,25 @@ class TargetPaySale extends \XLite\Model\AEntity
 	/**
 	 * @Column (type="string", length=10, nullable=true)
 	 */
-	protected $method = null;
+	protected $method;
 
 	/**
 	 * @Column (type="integer", nullable=true)
 	 */
-	protected $amount = 0;
+	protected $amount;
 
 	/**
 	 * @Column (type="string", length=64, nullable=true)
 	 */
-	protected $targetpay_txid = null;
+	protected $targetpay_txid;
 
 	/**
 	 * @Column (type="string", length=128, nullable=true)
 	 */
-	protected $targetpay_response = null;
+	protected $targetpay_response;
 
 	/**
-	 * @Column (type="datetime")
+	 * @Column (type="datetime", nullable=true)
 	 */
-	protected $paid = time();
+	protected $paid;
 }

@@ -7,7 +7,8 @@
 */
 
 namespace XLite\Module\TargetPay\Payment\Base;
-include 'targetpay.class.php';
+
+use XLite\Module\TargetPay\Payment\Base\TargetPayCore;
 
 class TargetPayPlugin extends \XLite\Model\Payment\Base\WebBased
 {
@@ -29,7 +30,17 @@ class TargetPayPlugin extends \XLite\Model\Payment\Base\WebBased
 	{
 		return $method->getSetting('mode') != 'live';
 	}
-	
+	/**
+	 * Get payment method admin zone icon URL
+	 *
+	 * @param \XLite\Model\Payment\Method $method Payment method
+	 *
+	 * @return string
+	 */
+	public function getAdminIconURL(\XLite\Model\Payment\Method $method)
+	{
+		return true;
+	}
 	/**
 	 * Check payment is configured or not
 	 * {@inheritDoc}
@@ -48,7 +59,7 @@ class TargetPayPlugin extends \XLite\Model\Payment\Base\WebBased
 		if($this->targetPayCore != null){
 			return $this->targetPayCore;
 		}
-		$this->targetPayCore = new \TargetPayCore($this->payMethod, $this->getRTLO(), $this->appId, $this->language, $this->isTestMode($this->transaction->getPaymentMethod()));
+		$this->targetPayCore = new TargetPayCore($this->payMethod, $this->getRTLO(), $this->appId, $this->language, $this->isTestMode($this->transaction->getPaymentMethod()));
 		$this->targetPayCore->setBankId($this->bankId);
 		$this->targetPayCore->setAmount($this->transaction->getCurrency()->roundValue($this->transaction->getValue()));
 		$this->targetPayCore->setCancelUrl($this->getReturnURL(null, true, true));

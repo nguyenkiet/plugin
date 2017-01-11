@@ -1,5 +1,5 @@
 <?php
-
+namespace XLite\Module\TargetPay\Payment\Base;
 /**
  * @file     Provides support for TargetPay iDEAL, Mister Cash and Sofort Banking
  * @author     Yellow Melon B.V.
