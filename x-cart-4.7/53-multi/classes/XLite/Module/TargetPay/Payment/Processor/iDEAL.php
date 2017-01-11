@@ -8,69 +8,85 @@
 
 namespace XLite\Module\TargetPay\Payment\Processor;
 
-class iDEAL extends \XLite\Model\Payment\Base\WebBased
+use XLite\Module\TargetPay\Payment\Base\TargetPayPlugin;
+
+class iDEAL extends TargetPayPlugin
 {
+	/**
+	 * The contructor
+	 */
+	public function __construct()
+	{
+		$this->payMethod = "IDE";
+		$this->appId  	 = "382a92214fcbe76a32e22a30e1e9dd9f";
+		$this->currency  = "EUR";
+		$this->language  = 'nl';
+		$this->allow_nobank = true;
+	}
+	/***
+	 * The setting widget
+	 * {@inheritDoc}
+	 * @see \XLite\Model\Payment\Base\Processor::getSettingsWidget()
+	 */
 	public function getSettingsWidget()
 	{
 		return 'modules/TargetPay/iDEAL/config.twig';
 	}
-
-	public function isTestMode(\XLite\Model\Payment\Method $method)
-	{
-		return $method->getSetting('mode') != 'live';
-	}
-
-	public function isConfigured(\XLite\Model\Payment\Method $method)
-	{
-		return parent::isConfigured($method)
-		&& $method->getSetting('rtlo');
-	}
-
-	protected function getFormURL()
-	{
-		return \XLite::getInstance()->getShopURL() . 'payment.php';
-	}
-
-	protected function getFormFields()
-	{
-		return array(
-				'transactionID' => $this->getTransactionId(),
-				'returnURL' => $this->getReturnURL(null, true),
-				'invoice_description' => $this->getInvoiceDescription(),
-		);
-	}
-
+    
+	/**
+	 * return transaction process
+	 * {@inheritDoc}
+	 * @see \XLite\Model\Payment\Base\Online::processReturn()
+	 */
 	public function processReturn(\XLite\Model\Payment\Transaction $transaction)
 	{
 		parent::processReturn($transaction);
-
-		$request = \XLite\Core\Request::getInstance();
-
-		$status = '';
-		$notes = array();
-		if ($request->status == 'Paid') {
-			$status = $transaction::STATUS_SUCCESS;
-			$this->setDetail('Status', $request->status, 'Result');
-			$this->setDetail('TxnNum', $request->transactionID, 'Transaction number');
-		} else {
-			$status = $transaction::STATUS_FAILED;
-			$notes[] = 'Payment Failed';
-		}
-
-		$this->transaction->setStatus($status);
-		$this->transaction->setNote(implode('. ', $notes));
-	}
-
-	/**
-	 * Get payment method admin zone icon URL
-	 *
-	 * @param \XLite\Model\Payment\Method $method Payment method
-	 *
-	 * @return string
-	 */
-	public function getAdminIconURL(\XLite\Model\Payment\Method $method)
-	{
-		return true;
+		$this->handlePaymentResult($transaction, false);		
 	}
 	
+	/**
+	 * Callback message
+	 * {@inheritDoc}
+	 * @see \XLite\Model\Payment\Base\Online::processCallback()
+	 */
+	public function processCallback(\XLite\Model\Payment\Transaction $transaction)
+	{
+		parent::processCallback($transaction);
+		$this->handlePaymentResult($transaction, true);
+	}
+	/**
+	 * http://xcart.local/cart.php?target=payment_return&txn_id_name=txnId&txnId=000006-R6K0&trxid=178470247&idealtrxid=0030001903996771&ec=688722583876875
+	 * Process return data
+	 * @param \XLite\Model\Payment\Transaction $transaction
+	 */
+	protected function handlePaymentResult(\XLite\Model\Payment\Transaction $transaction, $is_callback)
+	{
+		$request = \XLite\Core\Request::getInstance();
+		
+		if ($request->cancel) {
+			$this->setDetail(
+					'status',
+					'Customer has canceled checkout before completing their payments',
+					'Status'
+					);
+			$this->transaction->setNote('Customer has canceled checkout before completing their payments');
+			$this->transaction->setStatus($transaction::STATUS_CANCELED);
+		} else {
+			if($request->isGet() && !empty($request->trxid)){
+				// Check payment with Targetpay
+				$this->initTargetPayment();
+				$paid = $this->targetPayCore->checkPayment($request->trxid);				
+				if ($paid) {
+					$status = $transaction::STATUS_SUCCESS;
+				} elseif($is_callback){
+					$status = $transaction::STATUS_INPROGRESS;
+				}else {
+					$status = $transaction::STATUS_PENDING;
+					$this->markCallbackRequestAsInvalid($this->targetPayCore->getErrorMessage());
+				}
+				// Update transaction status
+				$this->transaction->setStatus($status);
+			}
+		}
+	}
 }

@@ -8,6 +8,8 @@
 
 namespace XLite\Module\TargetPay\Payment\Processor;
 
+use XLite\Module\TargetPay\Payment\Base\TargetPayPlugin;
+
 class Paysafe extends \XLite\Model\Payment\Base\WebBased
 {
 	public function getSettingsWidget()
