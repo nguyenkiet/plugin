@@ -6,7 +6,7 @@
 # See https://www.x-cart.com/license-agreement.html for license details.
 
 XLite\Model\Payment\Method:
-  - service_name: iDEAL
+  - service_name: 'Targetpay - iDEAL'
     class: Module\TargetPay\Payment\Processor\iDEAL
     type: C
     orderby: -104
@@ -20,7 +20,7 @@ XLite\Model\Payment\Method:
       - name: mode
         value: live
 
-  - service_name: Bancontact
+  - service_name: 'Targetpay - Bancontact'
     class: Module\TargetPay\Payment\Processor\Bancontact
     type: C
     orderby: -103
@@ -35,7 +35,7 @@ XLite\Model\Payment\Method:
         value: live
 
 
-  - service_name: Creditcard
+  - service_name: 'Targetpay - Creditcard'
     class: Module\TargetPay\Payment\Processor\Creditcard
     type: C
     orderby: -102
@@ -50,7 +50,7 @@ XLite\Model\Payment\Method:
         value: live
 
 
-  - service_name: Paysafe
+  - service_name: 'Targetpay - Paysafe'
     class: Module\TargetPay\Payment\Processor\Paysafe
     type: C
     orderby: -101
@@ -65,7 +65,7 @@ XLite\Model\Payment\Method:
         value: live
 
 
-  - service_name: Sofort
+  - service_name: 'Targetpay - Sofort'
     class: Module\TargetPay\Payment\Processor\Sofort
     type: C
     orderby: -100

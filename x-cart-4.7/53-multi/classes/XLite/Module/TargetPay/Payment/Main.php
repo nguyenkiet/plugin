@@ -14,11 +14,11 @@ namespace XLite\Module\TargetPay\Payment;
 abstract class Main extends \XLite\Module\AModule
 {
 
-	const PP_METHOD_IDEAL  		= 'iDEAL';
-	const PP_METHOD_BANCONTACT 	= 'Bancontact';
-	const PP_METHOD_CREDITCARD  = 'Creditcard';
-	const PP_METHOD_PAYSAFE  	= 'Paysafe';
-	const PP_METHOD_SOFORT   	= 'Sofort';
+	const PP_METHOD_IDEAL  		= 'Targetpay - iDEAL';
+	const PP_METHOD_BANCONTACT 	= 'Targetpay - Bancontact';
+	const PP_METHOD_CREDITCARD  = 'Targetpay - Creditcard';
+	const PP_METHOD_PAYSAFE  	= 'Targetpay - Paysafe';
+	const PP_METHOD_SOFORT   	= 'Targetpay - Sofort';
 	
     /**
      * Author name
