@@ -3,9 +3,9 @@
 
 /**
  * @file     	Provides support for TargetPay iDEAL, Mister Cash, Sofort Banking, Credit and Paysafe
- * @author     	Yellow Melon B.V.
- * @url         http://www.idealplugins.nl
- */
+* @author     	Yellow Melon B.V.
+* @url         http://www.idealplugins.nl
+*/
 
 namespace XLite\Module\TargetPay\Payment\Base;
 
@@ -89,7 +89,7 @@ class TargetPayPlugin extends \XLite\Model\Payment\Base\WebBased
 	protected function getRTLO()
 	{
 		if(!empty($this->rtlo)) return $this->rtlo;
-		 
+			
 		$method = $this->transaction->getPaymentMethod();
 		$this->rtlo = $method->getSetting('rtlo');
 		return $this->rtlo;
@@ -120,7 +120,7 @@ class TargetPayPlugin extends \XLite\Model\Payment\Base\WebBased
 		$this->initTargetPayment();
 		// Check the payment URL
 		if(!empty($this->targetPayCore->getBankUrl())) {
-			return $this->targetPayCore->getBankUrl();
+			return $this->validateBankUrl($this->targetPayCore->getBankUrl());
 		}
 		// init transaction from Targetpay before redirect to bank
 		if($this->targetPayCore->startPayment($this->allow_nobank)){
@@ -133,9 +133,31 @@ class TargetPayPlugin extends \XLite\Model\Payment\Base\WebBased
 			//$sale->paid = new \DateTime("now");
 			\XLite\Core\Database::getRepo('\XLite\Module\TargetPay\Payment\Model\TargetPaySale')->insert($sale);
 			// Return the URL
-			return $this->targetPayCore->getBankUrl();
+			return $this->validateBankUrl($this->targetPayCore->getBankUrl());
 		}
+		\XLite\Core\TopMessage::addError($this->targetPayCore->getErrorMessage());
 		return false;
+	}
+	/***
+	 * validate and remove dirty tag
+	 * @param unknown $location
+	 * @return unknown
+	 */
+	protected function validateBankUrl($location)
+	{
+		$location = preg_replace('/[\x00-\x1f].*$/sm', '', $location);
+		$location = str_replace(array('"', "'", '<', '>'), array('&quot;','&#039;', '&lt;', '&gt;'), $this->convert_amp($location));
+		return $location;
+	}
+	/**
+	 * validate and remove dirty tag
+	 * @param unknown $str
+	 * @return unknown
+	 */
+	protected function convert_amp($str)
+	{
+		// Do not convert html entities like &thetasym; &Omicron; &euro; &#8364; &#8218;
+		return preg_replace('/&(?![a-zA-Z0-9#]{1,8};)/Ss', '&amp;', $str);
 	}
 	/**
 	 * Don't pass parame to form
@@ -144,42 +166,7 @@ class TargetPayPlugin extends \XLite\Model\Payment\Base\WebBased
 	 */
 	protected function getFormFields()
 	{
-		$this->initTargetPayment();
-		 
-		$fields = array(
-				'paymethod'		=> $this->payMethod,
-				'app_id' 		=> $this->appId,
-				'rtlo' 			=> $this->getRTLO(),
-				'bank' 			=> $this->bankId,
-				'amount' 		=> $this->targetPayCore->getAmount(),
-				'description' 	=> $this->getTransactionDescription(),
-				'currency' 		=> $this->targetPayCore->getCurrency(),
-				'userip' 		=> $this->getClientIP(),
-				'domain' 		=> $this->getClientHost()
-		);
-		// Build Urls
-		if($this->cancelUrl) {
-			$fields['cancelurl'] = $this->getReturnURL(null, true, true);
-		}
-		if($this->returnUrl) {
-			$fields['returnurl'] = $this->getReturnURL(null, true);
-		}
-		if($this->reportUrl){
-			$fields['reporturl'] = $this->getReturnURL(null, true) . "&type=report";
-		}
-
-		// Validate payment methods to add extended parameters
-		if($this->payMethod == "IDE") {
-			$fields['ver'] = 3;
-			$fields['language'] = 'nl';
-		}elseif($this->payMethod == "MRC"){
-			$fields['language'] = $this->targetPayCore->getLanguage(array("NL","FR","EN"), "NL");
-		}elseif($this->payMethod=="DEB"){
-			$fields['type'] = 3;
-			$fields['country'] = 49;
-			$fields['language'] = $this->targetPayCore->getLanguage(array("NL","EN","DE"), "DE");
-		}
-		return $fields;
+		return ['paymethod'		=> $this->payMethod];
 	}
 	/**
 	 * Process return data
