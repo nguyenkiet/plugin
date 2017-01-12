@@ -23,6 +23,7 @@ class iDEAL extends TargetPayPlugin
 		$this->language  = 'nl';
 		$this->allow_nobank = true;
 	}
+	
 	/***
 	 * The setting widget
 	 * {@inheritDoc}
@@ -32,7 +33,7 @@ class iDEAL extends TargetPayPlugin
 	{
 		return 'modules/TargetPay/iDEAL/config.twig';
 	}
-    
+
 	/**
 	 * return transaction process
 	 * {@inheritDoc}
@@ -41,9 +42,9 @@ class iDEAL extends TargetPayPlugin
 	public function processReturn(\XLite\Model\Payment\Transaction $transaction)
 	{
 		parent::processReturn($transaction);
-		$this->handlePaymentResult($transaction, false);		
+		$this->handlePaymentResult($transaction, false);
 	}
-	
+
 	/**
 	 * Callback message
 	 * {@inheritDoc}
@@ -53,40 +54,5 @@ class iDEAL extends TargetPayPlugin
 	{
 		parent::processCallback($transaction);
 		$this->handlePaymentResult($transaction, true);
-	}
-	/**
-	 * http://xcart.local/cart.php?target=payment_return&txn_id_name=txnId&txnId=000006-R6K0&trxid=178470247&idealtrxid=0030001903996771&ec=688722583876875
-	 * Process return data
-	 * @param \XLite\Model\Payment\Transaction $transaction
-	 */
-	protected function handlePaymentResult(\XLite\Model\Payment\Transaction $transaction, $is_callback)
-	{
-		$request = \XLite\Core\Request::getInstance();
-		
-		if ($request->cancel) {
-			$this->setDetail(
-					'status',
-					'Customer has canceled checkout before completing their payments',
-					'Status'
-					);
-			$this->transaction->setNote('Customer has canceled checkout before completing their payments');
-			$this->transaction->setStatus($transaction::STATUS_CANCELED);
-		} else {
-			if($request->isGet() && !empty($request->trxid)){
-				// Check payment with Targetpay
-				$this->initTargetPayment();
-				$paid = $this->targetPayCore->checkPayment($request->trxid);				
-				if ($paid) {
-					$status = $transaction::STATUS_SUCCESS;
-				} elseif($is_callback){
-					$status = $transaction::STATUS_INPROGRESS;
-				}else {
-					$status = $transaction::STATUS_PENDING;
-					$this->markCallbackRequestAsInvalid($this->targetPayCore->getErrorMessage());
-				}
-				// Update transaction status
-				$this->transaction->setStatus($status);
-			}
-		}
 	}
 }
