@@ -97,7 +97,7 @@ $stateRow = tep_db_query($sql);
 $stateRow = tep_db_fetch_array($stateRow);
 
     //Payment callback was first, so we can say: the payment was successfull
-if($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PREPARE_ORDER_STATUS_ID ) {
+if ($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PREPARE_ORDER_STATUS_ID ) {
     $message = 'Je betaling is gelukt!<br/><a href="index.php">Klik hier om verder te winkelen.</a>';
     $bgcolor = '#D3FFD2';
     $bordercolor = '#8FFF8C';
@@ -117,11 +117,11 @@ if($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PREPARE_ORDER_STATU
     tep_redirect(tep_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL'));
     die();
 
-} else if($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PAYMENT_CANCELLED) {
+} elseif ($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PAYMENT_CANCELLED) {
     $message = 'Je hebt je betaling geannuleerd, <br/><a href="checkout_payment.php">Klik hier om een andere betaalmethode te kiezen.</a>';
     $bgcolor = '#FFE5C8';
     $bordercolor = '#FFC78C';
-} else if($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PAYMENT_ERROR) {
+} elseif ($stateRow["orders_status_id"] == MODULE_PAYMENT_TARGETPAY_PAYMENT_ERROR) {
     $message = 'Er was een probleem tijdens het controleren van je betaling, contacteer de webshop.';
     $bgcolor = '#FFBDB3';
     $bordercolor = '#FF9B8C';

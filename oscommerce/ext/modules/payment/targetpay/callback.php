@@ -57,7 +57,7 @@ if (tep_db_num_rows($targetpayDBValueQuery) > 0) {
             $paidStatus = true;                
         }
 
-        if($paidStatus) {
+        if ($paidStatus) {
                     
             tep_db_query("update " . TABLE_ORDERS . " set orders_status = '".MODULE_PAYMENT_TARGETPAY_PREPARE_ORDER_STATUS_ID."', last_modified = now() where orders_id = '" . (int)$order_id . "'");
                     

@@ -8,8 +8,8 @@ if (!defined('IS_ADMIN_FLAG')) {
 // register the New Tools tool into the admin menu structure.
 //
 if (function_exists('zen_register_admin_page')) {
-  if (!zen_page_key_exists('toolsTargetPayTransactions')) {
-    zen_register_admin_page('toolsTargetPayTransactions', 'BOX_TOOLS_TARGETPAY_TRANSACTIONS', 'FILENAME_TARGETPAY_TRANSACTIONS','' , 'tools', 'Y', 20);
-  }    
+    if (!zen_page_key_exists('toolsTargetPayTransactions')) {
+        zen_register_admin_page('toolsTargetPayTransactions', 'BOX_TOOLS_TARGETPAY_TRANSACTIONS', 'FILENAME_TARGETPAY_TRANSACTIONS', '', 'tools', 'Y', 20);
+    }    
 }
 ?>
