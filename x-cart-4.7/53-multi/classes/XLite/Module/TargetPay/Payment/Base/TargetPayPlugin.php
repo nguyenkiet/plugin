@@ -2,9 +2,10 @@
 // vim: set ts=4 sw=4 sts=4 et:
 
 /**
- * Copyright (c) 2011-present Qualiteam software Ltd. All rights reserved.
-* See https://www.x-cart.com/license-agreement.html for license details.
-*/
+ * @file     	Provides support for TargetPay iDEAL, Mister Cash, Sofort Banking, Credit and Paysafe
+ * @author     	Yellow Melon B.V.
+ * @url         http://www.idealplugins.nl
+ */
 
 namespace XLite\Module\TargetPay\Payment\Base;
 
